@@ -10,11 +10,21 @@ requirejs.config({
       "jQueryUI": "jquery-ui-1.10.3.custom",
       "backbone": "backbone-min",
       "underscore": "underscore-min",
-      "bootstrap" : "bootstrap.min"
+      "bootstrap" : "bootstrap.min",
+      "validate" : "jquery.validate.min",
+      "addMethods" : "additional-methods.min"
 
     }, shim: { 
         "jQueryUI": {
             export:"$" ,
+            deps: ['jQuery']
+        },
+         "validate": {
+            export:"val" ,
+            deps: ['jQuery']
+        },
+         "addMethods": {
+            export:"add" ,
             deps: ['jQuery']
         },
         "backbone":{

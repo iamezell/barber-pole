@@ -4,30 +4,43 @@
  */
 
 var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
+  , routes = require('./lib/routes')
   , http = require('http')
-  , wines = require('./routes/wine')
   , fs = require('fs')
   , path = require('path');
 
 var app = express();
+var MongoStore = require('connect-mongo')(express);
+var members = require('./lib/routes/members');
+var path = require('path');
+var user = require('./lib/routes/user');
+var api = require('./lib/routes/api');
+var routes = require('./lib/routes');
 
 // all environments
+app.use(express.bodyParser());
 app.set('port', process.env.PORT || 3030);
-app.set('views', __dirname + '/public');
-app.set('view engine', 'html');
-app.engine('html', function (path, options, fn) {
-      if ('function' == typeof options) {
-        fn = options, options = {};
-      }
-      fs.readFile(path, 'utf8', fn);
-    })
+app.set('views', path.join(__dirname, 'lib/views'));
+app.set('view engine', 'ejs');
+
 
 app.use(express.favicon());
 app.use(express.logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
+//make this more secure later
+app.use(express.cookieParser('1234567890QWERTY'));
+// app.use(express.session());
+app.use(express.session({
+  store: new MongoStore({
+    db: 'barberPoledb',
+    host: '127.0.0.1',
+    
+  })
+}));
+app.use(app.router);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -36,22 +49,15 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.get('/wines', wines.findAll);
 
 
-app.get("/wines/:id", wines.findById);
 
-app.get('/', function(req,res){
-	res.render('index.html', {layout:null});
-});
-
-app.get("/center", function(req,res){
-	res.render('center.html',{layout:null} );
-
-})
-
-
-app.use(app.router);
+app.get('/', routes.index);
+app.get('/members', members.members);
+app.post('/regi', user.register);
+app.post('/signin', user.signin)
+app.get('/verify', user.verify);
+app.get('/logout', user.logout)
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
